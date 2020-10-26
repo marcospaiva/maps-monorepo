@@ -24,7 +24,8 @@ backend/src/vendor/*
 !backend/src/vendor/.gitkeep
 
 # Database volume
-backend/db
+backend/db/*
+!backend/db/.gitkeep
 
 # Node Package Manager
 node_modules
