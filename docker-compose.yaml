@@ -1,0 +1,45 @@
+version: "3"
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/tmp/default.template
+      - ./backend/src:/var/www/html:rw,cached
+      - ./certs:/etc/certs
+    depends_on:
+      - wordpress
+    restart: always
+    entrypoint: /bin/bash -c 'cat /tmp/default.template | sed "s/\\\$$domain/myapp.local/g" > /etc/nginx/conf.d/default.conf && nginx -g "daemon off;"'
+
+  mysql:
+    image: mysql:latest
+    volumes:
+      - "./backend/db:/var/lib/mysql"
+    environment:
+      - MYSQL_ROOT_PASSWORD=123
+      - MYSQL_DATABASE=spots_maps
+    restart: always
+    ports:
+      - "3306:3306"
+
+  wordpress:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend/src:/var/www/html:rw,cached
+      - ./backend/config/php.ini:/usr/local/etc/php/conf.d/php.ini
+    depends_on:
+      - mysql
+    restart: always
+
+  composer:
+    image: composer
+    working_dir: /var/www/html
+    restart: "no"
+    volumes:
+      - ./backend/src:/var/www/html:rw,cached
